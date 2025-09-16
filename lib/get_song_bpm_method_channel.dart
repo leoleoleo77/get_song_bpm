@@ -10,14 +10,8 @@ class MethodChannelGetSongBpm extends GetSongBpmPlatform {
   final methodChannel = const MethodChannel('get_song_bpm');
 
   @override
-  Future<String?> getPlatformVersion() async {
-    final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
-    return version;
-  }
-
-  @override
-  Future<double> getBpmFromAudioFile(String audioInputPath) async {
-    final bpm = 120.0;
+  Future<double?> getBpmFromAudioFile(String audioInputPath) async {
+    final bpm = await methodChannel.invokeMethod<double>('getBpmFromAudioFile');
     return bpm;
   }
 }

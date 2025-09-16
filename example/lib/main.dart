@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
-import 'package:flutter/services.dart';
 import 'package:get_song_bpm/get_song_bpm.dart';
 
 void main() {
@@ -16,8 +14,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
-  final _getSongBpmPlugin = GetSongBpm();
+  double _bpm = 0;
 
   @override
   void initState() {
@@ -27,13 +24,13 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
-    String platformVersion;
+    double? bpm = null;
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
-      platformVersion = await _getSongBpmPlugin.getPlatformVersion() ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
+      bpm = await GetSongBpm.getBpmFromAudioFile("audioInputPath");
+    } catch (e) {
+      print(e);
     }
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -42,7 +39,7 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     setState(() {
-      _platformVersion = platformVersion;
+      _bpm = bpm ?? 0;
     });
   }
 
@@ -50,11 +47,8 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
         body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+          child: Text('BPM: $_bpm\n'),
         ),
       ),
     );

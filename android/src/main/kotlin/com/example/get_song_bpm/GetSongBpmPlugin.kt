@@ -8,7 +8,7 @@ import io.flutter.plugin.common.MethodChannel.Result
 
 /** GetSongBpmPlugin */
 
-enum class MethodCallName(value: String) {
+private enum class MethodCallName(value: String) {
   GET_BPM_FROM_AUDIO_FILE("getBpmFromAudioFile")
 }
 
@@ -26,9 +26,11 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
 
   override fun onMethodCall(call: MethodCall, result: Result) {
     when (call.method) {
-      MethodCallName.GET_BPM_FROM_AUDIO_FILE.name -> {
+
+      "getBpmFromAudioFile" -> {
         result.success(getBpmFromAudioFile())
-      },
+      }
+
       else -> { result.notImplemented() }
     }
   }
@@ -37,7 +39,7 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
     channel.setMethodCallHandler(null)
   }
 
-  private fun getBpmFromAudioFile(): double {
-
+  private fun getBpmFromAudioFile(): Double {
+    return 120.0
   }
 }

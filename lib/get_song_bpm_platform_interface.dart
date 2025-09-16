@@ -23,11 +23,7 @@ abstract class GetSongBpmPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<String?> getPlatformVersion() {
-    throw UnimplementedError('platformVersion() has not been implemented.');
-  }
-
-  Future<double> getBpmFromAudioFile(String audioInputPath) {
+  Future<double?> getBpmFromAudioFile(String audioInputPath) {
     throw UnimplementedError('getBpmFromAudioFile() has not been implemented.');
   }
 }
