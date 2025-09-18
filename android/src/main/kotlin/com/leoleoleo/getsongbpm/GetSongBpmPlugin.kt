@@ -1,10 +1,12 @@
-package com.example.get_song_bpm
+package com.leoleoleo.getsongbpm
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /** GetSongBpmPlugin */
 
@@ -30,13 +32,25 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
   }
 
   private fun handleOnGetBpmFromAudioFile(call: MethodCall, result: Result) {
+    val audioBytes = ByteBuffer.allocate(0)
+
+    val directBuffer = ByteBuffer.allocateDirect(0).apply {
+      order(ByteOrder.nativeOrder()) // Important for correct interpretation in C++
+      put(audioBytes)
+      position(0) // Reset position for reading
+    }
+
+
+    val resultFromCpp = BpmCalculator().calculateBpm(
+      audioBuffer = directBuffer,
+      sampleRate = 0,
+      channels = 0,
+    )
+    result.success(resultFromCpp) // Mocked BPM value
 //    val filePath = call.argument<String>("filePath")
 //    if (filePath == null) {
 //      result.error("INVALID_ARGUMENT", "File path is required.", null)
 //      return
 //    }
-
-    result.success(AudioAnalyzer.startBpmDetectionFromByteArray("/storage/emulated/0/Download/file_example_MP3_700KB.mp3"))
-
   }
 }

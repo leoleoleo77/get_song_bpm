@@ -1,4 +1,4 @@
-group = "com.example.get_song_bpm"
+group = "com.leoleoleo.getsongbpm"
 version = "1.0-SNAPSHOT"
 
 buildscript {
@@ -25,7 +25,7 @@ apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
 android {
-    namespace = "com.example.get_song_bpm"
+    namespace = "com.leoleoleo.getsongbpm"
 
     compileSdk = 35
 
@@ -48,10 +48,14 @@ android {
     }
 
     dependencies {
-        implementation 'be.tarsos.dsp:core:2.5'
-
         testImplementation("org.jetbrains.kotlin:kotlin-test")
         testImplementation("org.mockito:mockito-core:5.0.0")
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('CMakeLists.txt')
+        }
     }
 
     testOptions {

@@ -35,7 +35,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.example.get_song_bpm
+        package: com.leoleoleo.getsongbpm
         pluginClass: GetSongBpmPlugin
       ios:
         pluginClass: GetSongBpmPlugin

@@ -1,4 +1,4 @@
-package com.example.get_song_bpm_example
+package com.leoleoleo.get_song_bpm_example
 
 import io.flutter.embedding.android.FlutterActivity
 

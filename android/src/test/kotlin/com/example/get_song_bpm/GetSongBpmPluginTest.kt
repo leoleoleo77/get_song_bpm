@@ -1,4 +1,4 @@
-package com.example.get_song_bpm
+package com.leoleoleo.get_song_bpm
 
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
