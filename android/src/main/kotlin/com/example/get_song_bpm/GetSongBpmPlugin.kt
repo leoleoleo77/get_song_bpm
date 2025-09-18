@@ -8,15 +8,9 @@ import io.flutter.plugin.common.MethodChannel.Result
 
 /** GetSongBpmPlugin */
 
-private enum class MethodCallName(value: String) {
-  GET_BPM_FROM_AUDIO_FILE("getBpmFromAudioFile")
-}
+private const val GET_BPM_FROM_AUDIO_FILE = "getBpmFromAudioFile"
 
 class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
-  /// The MethodChannel that will the communication between Flutter and native Android
-  ///
-  /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-  /// when the Flutter Engine is detached from the Activity
   private lateinit var channel : MethodChannel
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
@@ -24,22 +18,25 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
     channel.setMethodCallHandler(this)
   }
 
-  override fun onMethodCall(call: MethodCall, result: Result) {
-    when (call.method) {
-
-      "getBpmFromAudioFile" -> {
-        result.success(getBpmFromAudioFile())
-      }
-
-      else -> { result.notImplemented() }
-    }
-  }
-
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
   }
 
-  private fun getBpmFromAudioFile(): Double {
-    return 120.0
+  override fun onMethodCall(call: MethodCall, result: Result) {
+    when (call.method) {
+      GET_BPM_FROM_AUDIO_FILE -> handleOnGetBpmFromAudioFile(call, result)
+      else -> result.notImplemented()
+    }
+  }
+
+  private fun handleOnGetBpmFromAudioFile(call: MethodCall, result: Result) {
+//    val filePath = call.argument<String>("filePath")
+//    if (filePath == null) {
+//      result.error("INVALID_ARGUMENT", "File path is required.", null)
+//      return
+//    }
+
+    result.success(AudioAnalyzer.startBpmDetectionFromByteArray("/storage/emulated/0/Download/file_example_MP3_700KB.mp3"))
+
   }
 }
