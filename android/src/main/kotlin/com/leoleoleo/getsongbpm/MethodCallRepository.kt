@@ -29,12 +29,7 @@ object MethodCallRepository {
 
             val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
 
-            // '.use' ensures the ParcelFileDescriptor is closed automatically
-            val pcmData = pfd.use {
-                val fd = it.fd
-
-                JNIInterface.decodeM4AtoPCM(fd)
-            }
+            val pcmData = pfd.use { JNIRepository.decodeM4AtoPCM(it.fd) }
 
             pcmData ?: throw RuntimeException("Failed to decode audio file. Result was null.")
         }

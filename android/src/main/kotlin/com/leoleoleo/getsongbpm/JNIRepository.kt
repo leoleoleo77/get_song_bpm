@@ -2,7 +2,7 @@ package com.leoleoleo.getsongbpm
 
 import java.nio.ByteBuffer
 
-object JNIInterface {
+object JNIRepository {
     init {
         System.loadLibrary("audio_decoder_jni")
         System.loadLibrary("bpm_calculator_jni")
