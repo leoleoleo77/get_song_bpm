@@ -11,6 +11,10 @@ find_library(
         log                 # The library to find (for logging)
 )
 
+find_library(android-lib android)
+
+find_library(mediandk-lib mediandk)
+
 # This helper variable points to the location of the native sources
 set(NATIVE_SRC_DIR src/cpp)
 # Add specific source files to the library
@@ -20,6 +24,19 @@ add_library(
         bpm_calculator_jni  # Library name
         SHARED              # Must be a shared library for JNI
         ${NATIVE_SRC_DIR}/jni-bridge.cpp      # The C++ file containing JNI functions
+)
+
+add_library(
+        audio_decoder_jni  # Library name
+        SHARED              # Must be a shared library for JNI
+        ${NATIVE_SRC_DIR}/audio-decoder.cpp      # The C++ file containing JNI functions
+)
+
+target_link_libraries(
+        audio_decoder_jni
+        ${log-lib}
+        ${android-lib}
+        ${mediandk-lib}
 )
 
 # --- Link our JNI bridge against SoundTouch and Android libraries ---
