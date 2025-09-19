@@ -4,7 +4,7 @@
 #include <cstring>   // for memcpy
 
 extern "C" JNIEXPORT jfloat JNICALL
-Java_com_leoleoleo_getsongbpm_JNIInterface_calculateBpm(
+Java_com_leoleoleo_getsongbpm_JNIRepository_calculateBpm(
         JNIEnv *env,
         jobject /* this */,
         jobject audioBuffer,
