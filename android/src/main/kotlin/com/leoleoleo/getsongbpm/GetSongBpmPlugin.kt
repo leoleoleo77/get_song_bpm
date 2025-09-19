@@ -14,17 +14,17 @@ import kotlinx.coroutines.cancel
 
 private const val methodChannelName = "get_song_bpm"
 
+private object MethodCallName {
+  val getBpmFromAudioFile
+    get() = "getBpmFromAudioFile"
+}
+
+private object MethodCallArgument {
+  val filePath
+    get() = "filePath"
+}
+
 class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
-
-  private object MethodCallName {
-    val getBpmFromAudioFile
-      get() = "getBpmFromAudioFile"
-  }
-
-  private object MethodCallArgument {
-    val filePath
-      get() = "filePath"
-  }
 
   private lateinit var channel : MethodChannel
 
@@ -53,35 +53,4 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
       else -> result.notImplemented()
     }
   }
-
-//  @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
-//  private fun handleOnGetBpmFromAudioFile(call: MethodCall, result: Result) {
-//    val parent = context.getExternalFilesDir(null)
-//    println("parent: $parent.")
-//    val file = File(parent, "LOOP_3.m4a")
-//    val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-//    val fd = pfd.fd
-//
-//    val pcmData: ByteArray? = AudioDecoder.decodeM4AtoPCM(fd) // Capture the ByteArray?
-//    pfd.close()
-//
-//    // ✅ Perform the check
-//    if (pcmData == null || pcmData.isEmpty()) {
-//      println("Decoding failed or produced no data.")
-//      result.error("DECODING_ERROR", "Failed to decode audio to PCM.", null)
-//    } else {
-//      println("Successfully received ${pcmData.size} bytes of PCM data from JNI.")
-//      // You can now proceed to save the file or process it
-//      // Save the raw PCM data to a file for verification
-//      try {
-//        val outputFile = File(context.cacheDir, "decoded_output.raw")
-//        outputFile.writeBytes(pcmData)
-//        println("Saved raw PCM to: ${outputFile.absolutePath}")
-//      } catch (e: Exception) {
-//        println("Error saving PCM file: ${e.message}")
-//      }
-//
-//      result.success(2.0) // Mocked BPM value for now
-//    }
-//  }
 }

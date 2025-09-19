@@ -14,7 +14,7 @@
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_leoleoleo_getsongbpm_AudioDecoder_decodeM4AtoPCM(
+Java_com_leoleoleo_getsongbpm_JNIInterface_decodeM4AtoPCM(
         JNIEnv *env,
         jobject /* this */,
         jint jFd) {

@@ -32,8 +32,8 @@ object MethodCallRepository {
             // '.use' ensures the ParcelFileDescriptor is closed automatically
             val pcmData = pfd.use {
                 val fd = it.fd
-                // This C++ call now correctly runs on a background IO thread
-                AudioDecoder.decodeM4AtoPCM(fd)
+
+                JNIInterface.decodeM4AtoPCM(fd)
             }
 
             pcmData ?: throw RuntimeException("Failed to decode audio file. Result was null.")
@@ -46,10 +46,8 @@ object MethodCallRepository {
         onSuccess: (Double) -> Unit,
         onError: (Exception) -> Unit,
     ) {
-        // Launch a single coroutine to handle the entire flow
         scope.launch {
             try {
-                // All the background work is now inside a suspend function
                 val pcmData = convertM4AInputFileToRawPCMByteArray(pathname)
 
                 // Mocked BPM calculation, now safely on the main thread

@@ -2,12 +2,14 @@ package com.leoleoleo.getsongbpm
 
 import java.nio.ByteBuffer
 
-object BpmCalculator {
+object JNIInterface {
     init {
+        System.loadLibrary("audio_decoder_jni")
         System.loadLibrary("bpm_calculator_jni")
     }
 
-    // Declare the native method. The implementation is in C++.
+    external fun decodeM4AtoPCM(path: Int): ByteArray?
+
     external fun calculateBpm(
         audioBuffer: ByteBuffer,
         sampleRate: Int,
