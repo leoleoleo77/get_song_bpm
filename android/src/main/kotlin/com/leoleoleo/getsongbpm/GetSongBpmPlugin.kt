@@ -15,6 +15,10 @@ import kotlinx.coroutines.cancel
 private const val methodChannelName = "get_song_bpm"
 
 private object MethodCallName {
+
+  val convertM4AInputFileToRawPCMByteArray
+    get() = "convertM4AInputFileToRawPCMByteArray"
+
   val getBpmFromAudioFile
     get() = "getBpmFromAudioFile"
 }
@@ -42,6 +46,16 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
 
   override fun onMethodCall(call: MethodCall, result: Result) {
     when (call.method) {
+
+      MethodCallName.convertM4AInputFileToRawPCMByteArray -> {
+        MethodCallRepository.convertM4AInputFileToRawPCMByteArray(
+          scope = scope,
+          pathname = call.argument<String>(MethodCallArgument.filePath),
+          onSuccess = { isSuccess -> result.success(isSuccess) },
+          onError = { error -> result.error("ERROR", error.message, null) }
+        )
+      }
+
       MethodCallName.getBpmFromAudioFile ->  {
         MethodCallRepository.getBpmFromAudioFile(
           scope = scope,
@@ -50,6 +64,7 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
           onError = { error -> result.error("ERROR", error.message, null) }
         )
       }
+
       else -> result.notImplemented()
     }
   }

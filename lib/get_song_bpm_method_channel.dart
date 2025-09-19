@@ -6,6 +6,7 @@ import 'get_song_bpm_platform_interface.dart';
 const String _methodChannelName = 'get_song_bpm';
 
 class _MethodCallName {
+  static String get convertM4AInputFileToRawPCMByteArray => "convertM4AInputFileToRawPCMByteArray";
   static String get getBpmFromAudioFile => "getBpmFromAudioFile";
 }
 
@@ -26,4 +27,10 @@ class MethodChannelGetSongBpm extends GetSongBpmPlatform {
             _MethodCallArgument.filePath: audioInputPath
           });
 
+  @override
+  Future<bool?> convertAudioInputFileToRawPCM(String audioInputPath) async =>
+      await methodChannel.invokeMethod<bool>(
+          _MethodCallName.convertM4AInputFileToRawPCMByteArray, {
+        _MethodCallArgument.filePath: audioInputPath
+      });
 }
