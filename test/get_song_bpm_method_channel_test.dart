@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_song_bpm/get_song_bpm_method_channel.dart';
+import 'package:getsongbpm/get_song_bpm_method_channel.dart';
 
 void main() {
   // TestWidgetsFlutterBinding.ensureInitialized();

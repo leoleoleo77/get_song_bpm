@@ -3,7 +3,7 @@ import UIKit
 import XCTest
 
 
-@testable import get_song_bpm
+@testable import getsongbpm
 
 // This demonstrates a simple unit test of the Swift portion of this plugin's implementation.
 //
