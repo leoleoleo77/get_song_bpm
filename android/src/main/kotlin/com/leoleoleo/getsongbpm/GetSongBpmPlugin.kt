@@ -42,6 +42,7 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     channel.setMethodCallHandler(null)
     scope.cancel()
+    SongProfilerSingleton.clear()
   }
 
   override fun onMethodCall(call: MethodCall, result: Result) {

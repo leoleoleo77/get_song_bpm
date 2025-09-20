@@ -1,31 +1,20 @@
 package com.leoleoleo.getsongbpm
 
+import java.nio.ByteBuffer
+
 object SongProfilerSingleton{
 
     private data class SongProfiler(
-        val pcmData: ByteArray
-    ) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as SongProfiler
-
-            return pcmData.contentEquals(other.pcmData)
-        }
-
-        override fun hashCode(): Int {
-            return pcmData.contentHashCode()
-        }
-    }
+        val pointerToPCMData: ByteBuffer
+    )
 
     private var map: MutableMap<String, SongProfiler>? = mutableMapOf()
 
     fun newInstance(
         filePath: String,
-        pcmData: ByteArray
+        pointerToPCMData: ByteBuffer
     ) {
-        val newSongProfiler = SongProfiler(pcmData)
+        val newSongProfiler = SongProfiler(pointerToPCMData)
 
         if (map == null) {
             map = mutableMapOf(filePath to newSongProfiler)
@@ -34,7 +23,15 @@ object SongProfilerSingleton{
         }
     }
 
-    fun getPCMDataFor(filePath: String): ByteArray? {
-        return map?.get(filePath)?.pcmData
+    fun getPointerToPCMDataFor(filePath: String): ByteBuffer? {
+        return map?.get(filePath)?.pointerToPCMData
+    }
+
+    fun clear() {
+        map?.forEach { (_, songProfiler) ->
+            JNIRepository.releaseBuffer(songProfiler.pointerToPCMData)
+        }
+        map?.clear()
+        map = null
     }
 }

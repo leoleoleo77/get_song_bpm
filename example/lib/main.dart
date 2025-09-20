@@ -28,7 +28,9 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
-      final songProfiler = SongProfiler("/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/LOOP_3.m4a", isVerbose: true);
+      // final songProfiler = SongProfiler("/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/LOOP_3.m4a", isVerbose: true);
+      final songProfiler = SongProfiler("/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/AndItNeverEnds.m4a", isVerbose: true);
+
       bpm = await songProfiler.getBpm();
     } catch (e) {
       print(e);

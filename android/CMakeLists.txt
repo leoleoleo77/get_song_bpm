@@ -23,7 +23,7 @@ set(NATIVE_SRC_DIR src/cpp)
 add_library(
         bpm_calculator_jni  # Library name
         SHARED              # Must be a shared library for JNI
-        ${NATIVE_SRC_DIR}/jni-bridge.cpp      # The C++ file containing JNI functions
+        ${NATIVE_SRC_DIR}/bpm-calculator.cpp      # The C++ file containing JNI functions
 )
 
 add_library(

@@ -3,8 +3,7 @@
 #include <BPMDetect.h>
 #include <cstring>   // for memcpy
 
-extern "C" JNIEXPORT jfloat JNICALL
-Java_com_leoleoleo_getsongbpm_JNIRepository_calculateBpm(
+extern "C" JNIEXPORT jfloat JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository_calculateBpm(
         JNIEnv *env,
         jobject /* this */,
         jobject audioBuffer,

@@ -8,7 +8,9 @@ object JNIRepository {
         System.loadLibrary("bpm_calculator_jni")
     }
 
-    external fun decodeM4AtoPCM(path: Int): ByteArray?
+    external fun decodeM4AtoPCM(path: Int): ByteBuffer?
+
+    external fun releaseBuffer(buffer: ByteBuffer)
 
     external fun calculateBpm(
         audioBuffer: ByteBuffer,

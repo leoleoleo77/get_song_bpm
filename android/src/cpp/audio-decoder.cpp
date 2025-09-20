@@ -12,16 +12,13 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
-extern "C"
-JNIEXPORT jbyteArray JNICALL
-Java_com_leoleoleo_getsongbpm_JNIRepository_decodeM4AtoPCM(
+extern "C" JNIEXPORT jobject JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository_decodeM4AtoPCM(
         JNIEnv *env,
         jobject /* this */,
-        jint jFd) {
-
+        jint jFd
+) {
     int fd = static_cast<int>(jFd);
 
-    /// 🧩 Set up AMediaExtractor using fd
     AMediaExtractor *extractor = AMediaExtractor_new();
     if (AMediaExtractor_setDataSourceFd(extractor, fd, 0, std::numeric_limits<long long>::max()) != AMEDIA_OK) {
         LOGE("Failed to set data source from fd");
@@ -29,7 +26,7 @@ Java_com_leoleoleo_getsongbpm_JNIRepository_decodeM4AtoPCM(
         return nullptr;
     }
 
-    /// 🧩 Find the audio track
+    // Find audio track
     int numTracks = AMediaExtractor_getTrackCount(extractor);
     int audioTrack = -1;
     for (int i = 0; i < numTracks; i++) {
@@ -50,7 +47,6 @@ Java_com_leoleoleo_getsongbpm_JNIRepository_decodeM4AtoPCM(
         return nullptr;
     }
 
-    /// 🧩 Select track & create decoder
     AMediaExtractor_selectTrack(extractor, audioTrack);
     AMediaFormat *format = AMediaExtractor_getTrackFormat(extractor, audioTrack);
     const char *mime = nullptr;
@@ -60,10 +56,8 @@ Java_com_leoleoleo_getsongbpm_JNIRepository_decodeM4AtoPCM(
     AMediaCodec_configure(codec, format, nullptr, nullptr, 0);
     AMediaCodec_start(codec);
 
-    /// 🧩 PCM output buffer
+    // Decode into vector
     std::vector<uint8_t> pcmData;
-
-    /// 🧩 Decode loop
     bool sawInputEOS = false;
     bool sawOutputEOS = false;
 
@@ -102,19 +96,45 @@ Java_com_leoleoleo_getsongbpm_JNIRepository_decodeM4AtoPCM(
         }
     }
 
-    /// 🧩 Clean up
     AMediaCodec_stop(codec);
     AMediaCodec_delete(codec);
     AMediaFormat_delete(format);
     AMediaExtractor_delete(extractor);
 
-    LOGI("Successfully decoded %zu bytes of PCM data.", pcmData.size()); // ✅ ADD THIS LOG
-    jbyteArray jPcmArray = env->NewByteArray(pcmData.size());
-    if (jPcmArray == nullptr) {
-        LOGE("Failed to allocate new byte array. Out of memory?");
-        // Clean up and return nullptr
+    LOGI("Decoded %zu bytes PCM", pcmData.size());
+
+    // Allocate native memory for direct buffer
+    void *nativeBuf = malloc(pcmData.size());
+    if (!nativeBuf) {
+        LOGE("malloc failed");
         return nullptr;
     }
-    env->SetByteArrayRegion(jPcmArray, 0, pcmData.size(), (jbyte *)pcmData.data());
-    return jPcmArray;
+    memcpy(nativeBuf, pcmData.data(), pcmData.size());
+
+    // Wrap it as a DirectByteBuffer
+    jobject directBuffer = env->NewDirectByteBuffer(nativeBuf, pcmData.size());
+    if (directBuffer == nullptr) {
+        LOGE("Failed to create DirectByteBuffer");
+        free(nativeBuf);
+        return nullptr;
+    }
+
+    return directBuffer;
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository_releaseBuffer(
+        JNIEnv *env,
+        jobject /* this */,
+        jobject buffer
+) {
+
+    if (buffer == nullptr) return;
+
+    void *addr = env->GetDirectBufferAddress(buffer);
+    if (addr != nullptr) {
+        free(addr);
+        LOGI("Freed native buffer at %p", addr);
+    } else {
+        LOGE("freeBuffer: buffer address was null!");
+    }
 }

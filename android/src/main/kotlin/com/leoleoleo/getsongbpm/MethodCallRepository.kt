@@ -35,12 +35,11 @@ object MethodCallRepository {
 
                     val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
 
-                    val pcmData = pfd.use { JNIRepository.decodeM4AtoPCM(it.fd) }
-
-                    if (pcmData != null) {
+                    val result = pfd.use { JNIRepository.decodeM4AtoPCM(it.fd) }
+                    if (result != null) {
                         SongProfilerSingleton.newInstance(
                             filePath = pathname,
-                            pcmData = pcmData
+                            pointerToPCMData = result
                         )
                         onSuccess(true)
                     } else {
@@ -61,17 +60,25 @@ object MethodCallRepository {
     ) {
         scope.launch {
             try {
-                var bpm: Double?
                 withContext(Dispatchers.IO) {
                     if (pathname.isNullOrEmpty()) {
                         throw IllegalArgumentException("File path cannot be null or empty")
                     }
 
-                    val data = SongProfilerSingleton.getPCMDataFor(filePath = pathname)
+                    val data = SongProfilerSingleton.getPointerToPCMDataFor(filePath = pathname)
 
-                    bpm = data?.size?.toDouble()
+                    val result = if (data != null) {
+                        JNIRepository.calculateBpm(
+                            audioBuffer = data,
+                            sampleRate = 44100,
+                            channels = 1
+                        ).toDouble()
+                    } else {
+                        throw IllegalStateException("PCM data not found for the given file path. Ensure that convertM4AInputFileToRawPCMByteArray is called first.")
+                    }
+
+                    onSuccess(result)
                 }
-                onSuccess(bpm ?: -2.0)
             } catch (e: Exception) {
                 onError(e)
             }
