@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get_song_bpm/AudioConfigs.dart';
 import 'dart:async';
-import 'package:get_song_bpm/get_song_bpm.dart';
+import 'package:get_song_bpm/SongProfiler.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,13 +26,19 @@ class _MyAppState extends State<MyApp> {
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     double? bpm = null;
+    double? bpm2 = null;
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
-      // final songProfiler = SongProfiler("/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/LOOP_3.m4a", isVerbose: true);
-      final songProfiler = SongProfiler("/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/AndItNeverEnds.m4a", isVerbose: true);
+      final songProfiler = SongProfiler(
+          "/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/LOOP_3.m4a",
+          isVerbose: true,
+          audioConfigs: AudioConfigs.defaults
+      );
+      // final songProfiler2 = SongProfiler("/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/AndItNeverEnds.m4a", isVerbose: true);
 
       bpm = await songProfiler.getBpm();
+      // bpm2 = await songProfiler2.getBpm();
     } catch (e) {
       print(e);
     }

@@ -8,13 +8,14 @@ import java.io.File
 import java.io.FileNotFoundException
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
+import java.nio.ByteBuffer
 
 object MethodCallRepository {
 
     fun convertM4AInputFileToRawPCMByteArray(
         scope: CoroutineScope,
         pathname: String?,
-        onSuccess: (Boolean) -> Unit,
+        onSuccess: (ByteBuffer, String) -> Unit,
         onError: (Exception) -> Unit,
     ) {
         scope.launch {
@@ -37,11 +38,7 @@ object MethodCallRepository {
 
                     val result = pfd.use { JNIRepository.decodeM4AtoPCM(it.fd) }
                     if (result != null) {
-                        SongProfilerSingleton.newInstance(
-                            filePath = pathname,
-                            pointerToPCMData = result
-                        )
-                        onSuccess(true)
+                        onSuccess(result, pathname)
                     } else {
                         throw RuntimeException("Failed to decode audio file. Result was null.")
                     }

@@ -14,14 +14,11 @@ enum InfoType {
 }
 
 class DebugLog {
-  static const _tag = '[GET_SONG_BPM_DEBUG_LOG]';
-
-  // todo: fix timestamp
-  static String _timestamp() => DateTime.now().toLocal().toIso8601String().toString();
+  static const _tag = '[get_song_bpm]';
 
   static void error(dynamic message) {
     if (kDebugMode) {
-      debugPrint('$_tag [${_timestamp()}] [ERROR] ${message ?? ''}');
+      debugPrint('$_tag [ERROR] ${message ?? ''}');
     }
   }
 
@@ -30,7 +27,7 @@ class DebugLog {
         InfoType type = InfoType.generic
       }) {
     if (kDebugMode && message != null) {
-      debugPrint('$_tag [${_timestamp()}] [${type.name}] $message');
+      debugPrint('$_tag [${type.name}] $message');
     }
   }
 }

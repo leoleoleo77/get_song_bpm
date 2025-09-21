@@ -37,7 +37,7 @@ extern "C" JNIEXPORT jfloat JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository_
     }
 
     // 5. Feed chunks to BPMDetect
-    const size_t chunkSize = 1024;
+    const size_t chunkSize = sampleRate * channels / 2;
     for (size_t i = 0; i < numSamples; i += chunkSize) {
         size_t remaining = numSamples - i;
         size_t currentChunk = remaining > chunkSize ? chunkSize : remaining;
