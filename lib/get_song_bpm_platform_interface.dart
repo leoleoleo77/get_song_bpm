@@ -27,7 +27,12 @@ abstract class GetSongBpmPlatform extends PlatformInterface {
     throw UnimplementedError('getBpmFromAudioFile() has not been implemented.');
   }
 
-  Future<bool?> convertAudioInputFileToRawPCM(String audioInputPath) {
+  Future<bool?> convertAudioInputFileToRawPCM(
+      String audioInputPath, {
+      required int sampleRate,
+      required int channels,
+      bool isVerbose = false
+  }) {
     throw UnimplementedError('convertAudioInputFileToRawPCM() has not been implemented.');
   }
 }

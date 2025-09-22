@@ -6,6 +6,7 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
+import io.flutter.plugin.common.MethodChannel.Result
 
 // Coroutine imports
 import kotlinx.coroutines.CoroutineScope
@@ -14,6 +15,10 @@ import kotlinx.coroutines.cancel
 import java.nio.ByteBuffer
 
 private const val methodChannelName = "get_song_bpm"
+
+internal const val defaultSampleRate = 44100
+
+internal const val defaultChannels = 1
 
 private object MethodCallName {
 
@@ -93,13 +98,22 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
     SongProfilerSingleton.newInstance(
       pointerToPCMData = pointer,
       filePath = pathname,
-      sampleRate = sampleRate,
-      channels = channels
+      sampleRate = sampleRate ?: defaultSampleRate,
+      channels = channels ?: defaultChannels
     )
     result.success(true)
 
-    val isVerbose = true//call.argument<Boolean>(MethodCallArgument.isVerbose) == true
+    val isVerbose = call.argument<Boolean>(MethodCallArgument.isVerbose) == true
     if (isVerbose) {
+
+      if (sampleRate == null) {
+        DebugLog.error("Sample rate not provided, defaulting to $defaultSampleRate Hz")
+      }
+
+      if (channels == null) {
+        DebugLog.error("Channels not provided, defaulting to $defaultChannels")
+      }
+
       buildString {
         appendLine(DebugLog.getString("Song Profiler Data:"))
         appendLine(DebugLog.getString("  File Path   : $pathname"))

@@ -12,6 +12,10 @@ class _MethodCallName {
 
 class _MethodCallArgument {
   static String get filePath => "filePath";
+  static String get sampleRate => "sampleRate";
+  static String get channels => "channels";
+  static String get isVerbose => "isVerbose";
+
 }
 
 /// An implementation of [GetSongBpmPlatform] that uses method channels.
@@ -24,13 +28,21 @@ class MethodChannelGetSongBpm extends GetSongBpmPlatform {
   Future<double?> getBpmFromAudioFile(String audioInputPath) async =>
       await methodChannel.invokeMethod<double>(
           _MethodCallName.getBpmFromAudioFile, {
-            _MethodCallArgument.filePath: audioInputPath
-          });
+          _MethodCallArgument.filePath: audioInputPath
+      });
 
   @override
-  Future<bool?> convertAudioInputFileToRawPCM(String audioInputPath) async =>
+  Future<bool?> convertAudioInputFileToRawPCM(
+      String audioInputPath, {
+      required int sampleRate,
+      required int channels,
+      bool isVerbose = false
+  }) async =>
       await methodChannel.invokeMethod<bool>(
           _MethodCallName.convertM4AInputFileToRawPCMByteArray, {
-        _MethodCallArgument.filePath: audioInputPath
+          _MethodCallArgument.filePath: audioInputPath,
+          _MethodCallArgument.sampleRate: sampleRate,
+          _MethodCallArgument.channels: channels,
+          _MethodCallArgument.isVerbose: isVerbose
       });
 }

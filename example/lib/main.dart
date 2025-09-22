@@ -31,9 +31,9 @@ class _MyAppState extends State<MyApp> {
     // We also handle the message potentially returning null.
     try {
       final songProfiler = SongProfiler(
-          "/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/LOOP_3.m4a",
+          "/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/LOOP_0.m4a",
           isVerbose: true,
-          audioConfigs: AudioConfigs.defaults
+          audioConfigs: AudioConfigs(sampleRate: 44100, channel: AudioChannel.mono)
       );
       // final songProfiler2 = SongProfiler("/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/AndItNeverEnds.m4a", isVerbose: true);
 

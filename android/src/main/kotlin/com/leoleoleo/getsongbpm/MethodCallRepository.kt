@@ -64,11 +64,18 @@ object MethodCallRepository {
 
                     val data = SongProfilerSingleton.getPointerToPCMDataFor(filePath = pathname)
 
+                    val sampleRate = SongProfilerSingleton.getSampleRateFor(filePath = pathname)
+                        ?: defaultSampleRate
+
+                    val channels = SongProfilerSingleton.getChannelsFor(filePath = pathname)
+                        ?: defaultChannels
+
                     val result = if (data != null) {
                         JNIRepository.calculateBpm(
                             audioBuffer = data,
-                            sampleRate = 44100,
-                            channels = 1
+                            bufferSize = data.capacity(),
+                            sampleRate = sampleRate,
+                            channels = channels
                         ).toDouble()
                     } else {
                         throw IllegalStateException("PCM data not found for the given file path. Ensure that convertM4AInputFileToRawPCMByteArray is called first.")

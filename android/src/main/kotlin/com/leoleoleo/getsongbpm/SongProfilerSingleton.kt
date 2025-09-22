@@ -6,16 +6,16 @@ object SongProfilerSingleton{
 
     private data class SongProfiler(
         val pointerToPCMData: ByteBuffer,
-        val sampleRate: Int?,
-        val channels: Int?
+        val sampleRate: Int,
+        val channels: Int
     )
 
     private var map: MutableMap<String, SongProfiler>? = mutableMapOf()
 
     fun newInstance(
         filePath: String,
-        sampleRate: Int?,
-        channels: Int?,
+        sampleRate: Int,
+        channels: Int,
         pointerToPCMData: ByteBuffer
     ) {
         // todo: if samplerate and channels are null default to 44100 and 2 respectively and print message
@@ -34,6 +34,14 @@ object SongProfilerSingleton{
 
     fun getPointerToPCMDataFor(filePath: String): ByteBuffer? {
         return map?.get(filePath)?.pointerToPCMData
+    }
+
+    fun getSampleRateFor(filePath: String): Int? {
+        return map?.get(filePath)?.sampleRate
+    }
+
+    fun getChannelsFor(filePath: String): Int? {
+        return map?.get(filePath)?.channels
     }
 
     fun clear() {

@@ -14,6 +14,7 @@ object JNIRepository {
 
     external fun calculateBpm(
         audioBuffer: ByteBuffer,
+        bufferSize: Int,
         sampleRate: Int,
         channels: Int
     ): Float

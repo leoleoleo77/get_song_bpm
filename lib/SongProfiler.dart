@@ -1,6 +1,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:get_song_bpm/AudioConfigs.dart';
 import 'package:get_song_bpm/utils/debug_log.dart';
 
@@ -31,7 +32,12 @@ class SongProfiler {
 
   Future<bool> _convertAudioInputFileToRawPCM(String audioInputPath) async {
     _log("Converting M4A file $_audioFilePath to raw PCM byte array...");
-    return await GetSongBpmPlatform.instance.convertAudioInputFileToRawPCM(audioInputPath) ?? false;
+    return await GetSongBpmPlatform.instance.convertAudioInputFileToRawPCM(
+        audioInputPath,
+        sampleRate: audioConfigs.sampleRate,
+        channels: audioConfigs.channels,
+        isVerbose: _shouldLog
+    ) ?? false;
   }
 
   Future<double?> getBpm() async {
@@ -47,7 +53,9 @@ class SongProfiler {
     }
   }
 
+  bool get _shouldLog => isVerbose && kDebugMode;
+
   void _log(String message) {
-    if (isVerbose) DebugLog.info(message);
+    if (_shouldLog) DebugLog.info(message);
   }
 }

@@ -3,50 +3,52 @@
 #include <BPMDetect.h>
 #include <cstring>   // for memcpy
 
+#define LOG_TAG "get_song_bpm"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+
 extern "C" JNIEXPORT jfloat JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository_calculateBpm(
         JNIEnv *env,
         jobject /* this */,
-        jobject audioBuffer,
+        jobject pcmBuffer,
+        jint bufferSize,
         jint sampleRate,
         jint channels
 ) {
-    // 1. Get the buffer pointer from Java's ByteBuffer
-    void *bufferPtr = env->GetDirectBufferAddress(audioBuffer);
-    if (bufferPtr == nullptr) {
-        __android_log_print(ANDROID_LOG_ERROR, "BPM", "Buffer pointer is null");
+    if (pcmBuffer == nullptr || bufferSize <= 0) {
+        LOGE("Invalid PCM buffer or size");
         return -1.0f;
     }
 
-    jlong bufferSize = env->GetDirectBufferCapacity(audioBuffer);
-    if (bufferSize <= 0) {
-        __android_log_print(ANDROID_LOG_ERROR, "BPM", "Buffer size is invalid");
+    // Get pointer to PCM data
+    int16_t *samples = reinterpret_cast<int16_t *>(env->GetDirectBufferAddress(pcmBuffer));
+    if (!samples) {
+        LOGE("Failed to get buffer address");
         return -1.0f;
     }
 
-    // 2. Create BPMDetect instance
-    soundtouch::BPMDetect bpm(channels, sampleRate);
+    size_t totalSamples = bufferSize / sizeof(int16_t);   // includes all channels
+    size_t totalFrames  = totalSamples / channels;
 
-    // 3. Assume the data is 16-bit PCM
-    int16_t *samples = static_cast<int16_t*>(bufferPtr);
-    size_t numSamples = bufferSize / sizeof(int16_t);
-
-    // 4. Convert to floats (SoundTouch expects floats)
-    std::vector<float> floatSamples(numSamples);
-    for (size_t i = 0; i < numSamples; ++i) {
+    // Convert to float (interleaved preserved)
+    std::vector<float> floatSamples(totalSamples);
+    for (size_t i = 0; i < totalSamples; ++i) {
         floatSamples[i] = samples[i] / 32768.0f;
     }
 
-    // 5. Feed chunks to BPMDetect
-    const size_t chunkSize = sampleRate * channels / 2;
-    for (size_t i = 0; i < numSamples; i += chunkSize) {
-        size_t remaining = numSamples - i;
-        size_t currentChunk = remaining > chunkSize ? chunkSize : remaining;
-        bpm.inputSamples(&floatSamples[i], currentChunk);
+    // Init BPM detector
+    soundtouch::BPMDetect bpm(channels, sampleRate);
+
+    // Feed in chunks of frames
+    const size_t chunkFrames = sampleRate / 2; // half a second worth
+    for (size_t f = 0; f < totalFrames; f += chunkFrames) {
+        size_t remainingFrames = totalFrames - f;
+        size_t currentFrames   = remainingFrames > chunkFrames ? chunkFrames : remainingFrames;
+        bpm.inputSamples(&floatSamples[f * channels], currentFrames);
     }
 
-    // 6. Get BPM result
-    float bpmResult = bpm.getBpm();
-    __android_log_print(ANDROID_LOG_INFO, "BPM", "Detected BPM: %.2f", bpmResult);
+    float bpmVal = bpm.getBpm();
+    LOGI("Detected BPM: %f", bpmVal);
 
-    return bpmResult;
+    return bpmVal;
 }
