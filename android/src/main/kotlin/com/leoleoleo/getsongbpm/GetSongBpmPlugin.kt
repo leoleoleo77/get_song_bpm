@@ -27,6 +27,9 @@ private object MethodCallName {
 
   val getBpmFromAudioFile
     get() = "getBpmFromAudioFile"
+
+  val extractWaveform
+    get() = "extractWaveform"
 }
 
 private object MethodCallArgument {
@@ -42,6 +45,9 @@ private object MethodCallArgument {
 
   val isVerbose
     get() = "isVerbose"
+
+  val numPoints
+    get() = "numPoints"
 }
 
 class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
@@ -78,6 +84,16 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
           scope = scope,
           pathname = call.argument<String>(MethodCallArgument.filePath),
           onSuccess = { bpm -> result.success(bpm) },
+          onError = { handleError(result, it) }
+        )
+      }
+
+      MethodCallName.extractWaveform -> {
+        MethodCallRepository.extractWaveform(
+          scope = scope,
+          pathname = call.argument<String>(MethodCallArgument.filePath),
+          numPoints = call.argument<Int>(MethodCallArgument.numPoints),
+          onSuccess = { waveform -> result.success(waveform) },
           onError = { handleError(result, it) }
         )
       }

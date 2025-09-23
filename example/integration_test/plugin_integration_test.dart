@@ -10,7 +10,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-import 'package:get_song_bpm/get_song_bpm.dart';
 
 void main() {
   // IntegrationTestWidgetsFlutterBinding.ensureInitialized();

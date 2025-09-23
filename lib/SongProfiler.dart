@@ -53,6 +53,19 @@ class SongProfiler {
     }
   }
 
+  Future<List<double>?> extractWaveform({required int numPoints}) async {
+    _log("extractWaveform() called with numPoints: $numPoints, waiting for the initial conversion to finish for $_audioFilePath...");
+    final isFileConverted = await _isFileConverted.future;
+
+    if (isFileConverted) {
+      _log("Conversion successful, extracting waveform for $_audioFilePath...");
+      return await GetSongBpmPlatform.instance.extractWaveform(_audioFilePath, numPoints: numPoints);
+    } else {
+      _log("Conversion failed, cannot extract waveform for $_audioFilePath.");
+      return null;
+    }
+  }
+
   bool get _shouldLog => isVerbose && kDebugMode;
 
   void _log(String message) {

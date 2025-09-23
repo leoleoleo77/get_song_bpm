@@ -8,6 +8,7 @@ const String _methodChannelName = 'get_song_bpm';
 class _MethodCallName {
   static String get convertM4AInputFileToRawPCMByteArray => "convertM4AInputFileToRawPCMByteArray";
   static String get getBpmFromAudioFile => "getBpmFromAudioFile";
+  static String get extractWaveform => "extractWaveform";
 }
 
 class _MethodCallArgument {
@@ -15,7 +16,7 @@ class _MethodCallArgument {
   static String get sampleRate => "sampleRate";
   static String get channels => "channels";
   static String get isVerbose => "isVerbose";
-
+  static String get numPoints => "numPoints";
 }
 
 /// An implementation of [GetSongBpmPlatform] that uses method channels.
@@ -25,6 +26,21 @@ class MethodChannelGetSongBpm extends GetSongBpmPlatform {
   final methodChannel = const MethodChannel(_methodChannelName);
 
   @override
+  Future<bool?> convertAudioInputFileToRawPCM(
+      String audioInputPath, {
+        required int sampleRate,
+        required int channels,
+        required bool isVerbose
+      }) async =>
+      await methodChannel.invokeMethod<bool>(
+          _MethodCallName.convertM4AInputFileToRawPCMByteArray, {
+          _MethodCallArgument.filePath: audioInputPath,
+          _MethodCallArgument.sampleRate: sampleRate,
+          _MethodCallArgument.channels: channels,
+          _MethodCallArgument.isVerbose: isVerbose
+      });
+
+  @override
   Future<double?> getBpmFromAudioFile(String audioInputPath) async =>
       await methodChannel.invokeMethod<double>(
           _MethodCallName.getBpmFromAudioFile, {
@@ -32,17 +48,13 @@ class MethodChannelGetSongBpm extends GetSongBpmPlatform {
       });
 
   @override
-  Future<bool?> convertAudioInputFileToRawPCM(
+  Future<List<double>?> extractWaveform(
       String audioInputPath, {
-      required int sampleRate,
-      required int channels,
-      bool isVerbose = false
+      required int numPoints,
   }) async =>
-      await methodChannel.invokeMethod<bool>(
-          _MethodCallName.convertM4AInputFileToRawPCMByteArray, {
+      await methodChannel.invokeMethod<List<double>>(
+          _MethodCallName.extractWaveform, {
           _MethodCallArgument.filePath: audioInputPath,
-          _MethodCallArgument.sampleRate: sampleRate,
-          _MethodCallArgument.channels: channels,
-          _MethodCallArgument.isVerbose: isVerbose
+          _MethodCallArgument.numPoints: numPoints,
       });
 }

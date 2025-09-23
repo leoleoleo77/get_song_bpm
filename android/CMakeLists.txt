@@ -32,6 +32,12 @@ add_library(
         ${NATIVE_SRC_DIR}/audio-decoder.cpp      # The C++ file containing JNI functions
 )
 
+add_library(
+        extract_waveform_jni  # Library name
+        SHARED              # Must be a shared library for JNI
+        ${NATIVE_SRC_DIR}/extract-waveform.cpp      # The C++ file containing JNI functions
+)
+
 target_link_libraries(
         audio_decoder_jni
         ${log-lib}
@@ -45,4 +51,10 @@ target_link_libraries(
         PRIVATE
         SoundTouch          # Link against the SoundTouch library target
         ${log-lib}          # Link against the Android log library
+)
+
+target_link_libraries(
+        extract_waveform_jni
+        ${log-lib}
+        ${mediandk-lib}
 )

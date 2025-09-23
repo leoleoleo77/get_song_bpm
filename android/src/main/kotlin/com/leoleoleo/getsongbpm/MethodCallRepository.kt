@@ -88,5 +88,51 @@ object MethodCallRepository {
             }
         }
     }
+
+    fun extractWaveform(
+        scope: CoroutineScope,
+        pathname: String?,
+        numPoints: Int?,
+        onSuccess: (FloatArray) -> Unit,
+        onError: (Exception) -> Unit,
+    ) {
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+
+                    if (pathname.isNullOrEmpty()) {
+                        throw IllegalArgumentException("File path cannot be null or empty")
+                    }
+
+                    if (numPoints == null || numPoints <= 0) {
+                        throw IllegalArgumentException("numPoints must be a positive integer")
+                    }
+
+                    val data = SongProfilerSingleton.getPointerToPCMDataFor(filePath = pathname)
+
+                    val sampleRate = SongProfilerSingleton.getSampleRateFor(filePath = pathname)
+                        ?: defaultSampleRate
+
+                    val channels = SongProfilerSingleton.getChannelsFor(filePath = pathname)
+                        ?: defaultChannels
+
+                    val result = if (data != null) {
+                        JNIRepository.extractWaveform(
+                            audioBuffer = data,
+                            bufferSize = data.capacity(),
+                            sampleRate = sampleRate,
+                            channels = channels,
+                            numPoints = numPoints
+                        ) ?: throw RuntimeException("Failed to extract waveform. Result was null.")
+                    } else {
+                        throw IllegalStateException("PCM data not found for the given file path")
+                    }
+                    onSuccess(result)
+                }
+            } catch (e: Exception) {
+                onError(e)
+            }
+        }
+    }
 }
 

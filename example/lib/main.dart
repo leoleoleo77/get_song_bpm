@@ -16,6 +16,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   double _bpm = 0;
+  int _waveform = 0;
 
   @override
   void initState() {
@@ -26,7 +27,7 @@ class _MyAppState extends State<MyApp> {
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     double? bpm = null;
-    double? bpm2 = null;
+    List<double>? waveform = null;
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
@@ -38,7 +39,7 @@ class _MyAppState extends State<MyApp> {
       // final songProfiler2 = SongProfiler("/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/AndItNeverEnds.m4a", isVerbose: true);
 
       bpm = await songProfiler.getBpm();
-      // bpm2 = await songProfiler2.getBpm();
+      waveform = await  songProfiler.extractWaveform(numPoints: 100);
     } catch (e) {
       print(e);
     }
@@ -50,6 +51,7 @@ class _MyAppState extends State<MyApp> {
 
     setState(() {
       _bpm = bpm ?? 0;
+      _waveform = waveform?.length ?? 0;
     });
   }
 
@@ -58,7 +60,12 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         body: Center(
-          child: Text('BPM: $_bpm\n'),
+          child: Column(
+            children: [
+              Text('BPM: $_bpm\n'),
+              Text('Waveform: $_waveform\n'),
+            ],
+          ),
         ),
       ),
     );
