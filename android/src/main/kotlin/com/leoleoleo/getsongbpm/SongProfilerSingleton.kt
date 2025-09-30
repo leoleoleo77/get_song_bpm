@@ -18,7 +18,6 @@ object SongProfilerSingleton{
         channels: Int,
         pointerToPCMData: ByteBuffer
     ) {
-        // todo: if samplerate and channels are null default to 44100 and 2 respectively and print message
         val newSongProfiler = SongProfiler(
             pointerToPCMData = pointerToPCMData,
             sampleRate = sampleRate,
@@ -46,7 +45,7 @@ object SongProfilerSingleton{
 
     fun clear() {
         map?.forEach { (_, songProfiler) ->
-            JNIRepository.releaseBuffer(songProfiler.pointerToPCMData)
+            JNIRepository.releaseBuffer(songProfiler.pointerToPCMData, logTag = logTag)
         }
         map?.clear()
         map = null

@@ -9,15 +9,19 @@ object JNIRepository {
         System.loadLibrary("extract_waveform_jni")
     }
 
-    external fun decodeM4AtoPCM(path: Int): ByteBuffer?
+    external fun decodeM4AtoPCM(
+        path: Int,
+        logTag: String
+    ): ByteBuffer?
 
-    external fun releaseBuffer(buffer: ByteBuffer)
+    external fun releaseBuffer(buffer: ByteBuffer, logTag: String)
 
     external fun calculateBpm(
         audioBuffer: ByteBuffer,
         bufferSize: Int,
         sampleRate: Int,
-        channels: Int
+        channels: Int,
+        logTag: String
     ): Float
 
     external fun extractWaveform(
@@ -25,6 +29,7 @@ object JNIRepository {
         bufferSize: Int,
         sampleRate: Int,
         channels: Int,
-        numPoints: Int
+        numPoints: Int,
+        logTag: String
     ): FloatArray?
 }

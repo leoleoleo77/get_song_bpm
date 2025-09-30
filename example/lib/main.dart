@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:get_song_bpm/AudioConfigs.dart';
+import 'package:get_song_bpm/song_profiler/audio_configs.dart';
 import 'dart:async';
-import 'package:get_song_bpm/SongProfiler.dart';
+import 'package:get_song_bpm/song_profiler/SongProfiler.dart';
+import 'package:get_song_bpm/song_profiler/debug_configs.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,8 +34,14 @@ class _MyAppState extends State<MyApp> {
     try {
       final songProfiler = SongProfiler(
           "/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/LOOP_0.m4a",
-          isVerbose: true,
-          audioConfigs: AudioConfigs(sampleRate: 44100, channel: AudioChannel.mono)
+          audioConfigs: AudioConfigs(
+              sampleRate: AudioConfigs.defaultSampleRate,
+              channel: AudioConfigs.defaultChannels,
+          ),
+          debugConfigs: DebugConfigs(
+            isVerbose: false,
+            logTag: "[GetSongBpmExample]",
+        )
       );
       // final songProfiler2 = SongProfiler("/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/AndItNeverEnds.m4a", isVerbose: true);
 

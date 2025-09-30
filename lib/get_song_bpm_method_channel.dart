@@ -17,6 +17,7 @@ class _MethodCallArgument {
   static String get channels => "channels";
   static String get isVerbose => "isVerbose";
   static String get numPoints => "numPoints";
+  static String get logTag => "logTag";
 }
 
 /// An implementation of [GetSongBpmPlatform] that uses method channels.
@@ -30,14 +31,16 @@ class MethodChannelGetSongBpm extends GetSongBpmPlatform {
       String audioInputPath, {
         required int sampleRate,
         required int channels,
-        required bool isVerbose
+        required bool isVerbose,
+        required String logTag
       }) async =>
       await methodChannel.invokeMethod<bool>(
           _MethodCallName.convertM4AInputFileToRawPCMByteArray, {
           _MethodCallArgument.filePath: audioInputPath,
           _MethodCallArgument.sampleRate: sampleRate,
           _MethodCallArgument.channels: channels,
-          _MethodCallArgument.isVerbose: isVerbose
+          _MethodCallArgument.isVerbose: isVerbose,
+          _MethodCallArgument.logTag: logTag,
       });
 
   @override

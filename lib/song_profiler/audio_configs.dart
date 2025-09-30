@@ -14,15 +14,8 @@ class AudioConfigs {
 
   int get channels => _channels;
 
-  static const int _defaultSampleRate = 44100;
-  static const AudioChannel _defaultChannels = AudioChannel.mono;
-
-  static AudioConfigs get defaults {
-    return AudioConfigs(
-        sampleRate: _defaultSampleRate,
-        channel: _defaultChannels
-    );
-  }
+  static const int defaultSampleRate = 44100;
+  static const AudioChannel defaultChannels = AudioChannel.mono;
 }
 
 enum AudioChannel {
@@ -30,5 +23,6 @@ enum AudioChannel {
   stereo(2);
 
   final int value;
+
   const AudioChannel(this.value);
 }

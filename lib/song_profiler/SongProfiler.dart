@@ -2,22 +2,23 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:get_song_bpm/AudioConfigs.dart';
-import 'package:get_song_bpm/utils/debug_log.dart';
+import 'package:get_song_bpm/song_profiler/debug_configs.dart';
+import 'package:get_song_bpm/song_profiler/debug_log.dart';
 
-import 'get_song_bpm_platform_interface.dart';
+import '../get_song_bpm_platform_interface.dart';
+import 'audio_configs.dart';
 
 class SongProfiler {
   final String _audioFilePath;
-  final AudioConfigs audioConfigs;
-  final bool isVerbose;
+  final AudioConfigs? audioConfigs;
+  final DebugConfigs? debugConfigs;
 
   final _isFileConverted = Completer<bool>();
 
   SongProfiler(
       this._audioFilePath, {
-      required this.audioConfigs,
-      this.isVerbose = false // todo
+      this.audioConfigs,
+      this.debugConfigs,
   }) {
     _convertAudioInputFileToRawPCM(_audioFilePath).then((conversionResult) {
       _isFileConverted.complete(conversionResult);
@@ -30,13 +31,18 @@ class SongProfiler {
     });
   }
 
+  int get _sampleRate => audioConfigs?.sampleRate ?? AudioConfigs.defaultSampleRate;
+
+  int get _channels => audioConfigs?.channels ?? AudioConfigs.defaultChannels.value;
+
   Future<bool> _convertAudioInputFileToRawPCM(String audioInputPath) async {
     _log("Converting M4A file $_audioFilePath to raw PCM byte array...");
     return await GetSongBpmPlatform.instance.convertAudioInputFileToRawPCM(
         audioInputPath,
-        sampleRate: audioConfigs.sampleRate,
-        channels: audioConfigs.channels,
-        isVerbose: _shouldLog
+        sampleRate: _sampleRate,
+        channels: _channels,
+        isVerbose: _shouldLog,
+        logTag: _debugTag
     ) ?? false;
   }
 
@@ -66,9 +72,11 @@ class SongProfiler {
     }
   }
 
-  bool get _shouldLog => isVerbose && kDebugMode;
+  bool get _shouldLog => (debugConfigs?.isVerbose == true) && kDebugMode;
+
+  String get _debugTag => _shouldLog ? "" : debugConfigs?.logTag ?? "";
 
   void _log(String message) {
-    if (_shouldLog) DebugLog.info(message);
+    if (_shouldLog) DebugLog.info(message, tag: _debugTag);
   }
 }

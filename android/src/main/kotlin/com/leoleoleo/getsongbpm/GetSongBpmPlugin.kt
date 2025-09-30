@@ -1,7 +1,6 @@
 package com.leoleoleo.getsongbpm
 
 // Flutter imports
-import com.leoleoleo.getsongbpm.utils.DebugLog
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -12,43 +11,8 @@ import io.flutter.plugin.common.MethodChannel.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import java.nio.ByteBuffer
 
 private const val methodChannelName = "get_song_bpm"
-
-internal const val defaultSampleRate = 44100
-
-internal const val defaultChannels = 1
-
-private object MethodCallName {
-
-  val convertM4AInputFileToRawPCMByteArray
-    get() = "convertM4AInputFileToRawPCMByteArray"
-
-  val getBpmFromAudioFile
-    get() = "getBpmFromAudioFile"
-
-  val extractWaveform
-    get() = "extractWaveform"
-}
-
-private object MethodCallArgument {
-
-  val filePath
-    get() = "filePath"
-
-  val sampleRate
-    get() = "sampleRate"
-
-  val channels
-    get() = "channels"
-
-  val isVerbose
-    get() = "isVerbose"
-
-  val numPoints
-    get() = "numPoints"
-}
 
 class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
 
@@ -71,6 +35,7 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
     when (call.method) {
 
       MethodCallName.convertM4AInputFileToRawPCMByteArray -> {
+        logTag = call.argument<String>(MethodCallArgument.logTag) ?: defaultLogTag // Set log tag if provided
         MethodCallRepository.convertM4AInputFileToRawPCMByteArray(
           scope = scope,
           pathname = call.argument<String>(MethodCallArgument.filePath),
@@ -100,47 +65,5 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
 
       else -> result.notImplemented()
     }
-  }
-
-  private fun handleOnConversionSuccess(
-    call: MethodCall,
-    result: Result,
-    pointer: ByteBuffer,
-    pathname: String
-  ) {
-    val sampleRate = call.argument<Int>(MethodCallArgument.sampleRate)
-    val channels = call.argument<Int>(MethodCallArgument.channels)
-
-    SongProfilerSingleton.newInstance(
-      pointerToPCMData = pointer,
-      filePath = pathname,
-      sampleRate = sampleRate ?: defaultSampleRate,
-      channels = channels ?: defaultChannels
-    )
-    result.success(true)
-
-    val isVerbose = call.argument<Boolean>(MethodCallArgument.isVerbose) == true
-    if (isVerbose) {
-
-      if (sampleRate == null) {
-        DebugLog.error("Sample rate not provided, defaulting to $defaultSampleRate Hz")
-      }
-
-      if (channels == null) {
-        DebugLog.error("Channels not provided, defaulting to $defaultChannels")
-      }
-
-      buildString {
-        appendLine(DebugLog.getString("Song Profiler Data:"))
-        appendLine(DebugLog.getString("  File Path   : $pathname"))
-        appendLine(DebugLog.getString("  Pointer to PCM Data : $pointer"))
-        appendLine(DebugLog.getString("  Sample Rate : $sampleRate Hz"))
-        appendLine(DebugLog.getString("  Channels    : $channels"))
-      }.also { print(it) }
-    }
-  }
-
-  private fun handleError(result: Result, error: Exception) {
-    result.error("ERROR", error.message, null)
   }
 }

@@ -7,27 +7,47 @@
 #include <vector>
 #include <cstdint>
 #include <limits>
+#include <cstdarg>
 
-#define LOG_TAG "get_song_bpm"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+// Safe logging helpers
+inline void safeLogI(const char *logTag, const char *fmt, ...) {
+    if (!logTag || logTag[0] == '\0') return;
+    va_list args;
+    va_start(args, fmt);
+    __android_log_vprint(ANDROID_LOG_INFO, logTag, fmt, args);
+    va_end(args);
+}
 
-extern "C" JNIEXPORT jobject JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository_decodeM4AtoPCM(
+inline void safeLogE(const char *logTag, const char *fmt, ...) {
+    if (!logTag || logTag[0] == '\0') return;
+    va_list args;
+    va_start(args, fmt);
+    __android_log_vprint(ANDROID_LOG_ERROR, logTag, fmt, args);
+    va_end(args);
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_com_leoleoleo_getsongbpm_JNIRepository_decodeM4AtoPCM(
         JNIEnv *env,
         jobject /* this */,
-        jint jFd
+        jint jFd,
+        jstring jLogTag
 ) {
+    const char *logTag = env->GetStringUTFChars(jLogTag, nullptr);
     int fd = static_cast<int>(jFd);
 
     AMediaExtractor *extractor = AMediaExtractor_new();
     if (AMediaExtractor_setDataSourceFd(extractor, fd, 0, std::numeric_limits<long long>::max()) != AMEDIA_OK) {
-        LOGE("Failed to set data source from fd");
+        safeLogE(logTag, "[C++] Failed to set data source from fd");
+        env->ReleaseStringUTFChars(jLogTag, logTag);
         AMediaExtractor_delete(extractor);
         return nullptr;
     }
 
     // Find audio track
     int numTracks = AMediaExtractor_getTrackCount(extractor);
+    safeLogI(logTag, "[C++] Found %d track(s) in file", numTracks);
+
     int audioTrack = -1;
     for (int i = 0; i < numTracks; i++) {
         AMediaFormat *format = AMediaExtractor_getTrackFormat(extractor, i);
@@ -35,6 +55,7 @@ extern "C" JNIEXPORT jobject JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository
         if (AMediaFormat_getString(format, AMEDIAFORMAT_KEY_MIME, &mime) &&
             strncmp(mime, "audio/", 6) == 0) {
             audioTrack = i;
+            safeLogI(logTag, "[C++] Selected audio track %d with MIME type: %s", i, mime);
             AMediaFormat_delete(format);
             break;
         }
@@ -42,7 +63,8 @@ extern "C" JNIEXPORT jobject JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository
     }
 
     if (audioTrack < 0) {
-        LOGE("No audio track found");
+        safeLogE(logTag, "[C++] No audio track found");
+        env->ReleaseStringUTFChars(jLogTag, logTag);
         AMediaExtractor_delete(extractor);
         return nullptr;
     }
@@ -56,15 +78,17 @@ extern "C" JNIEXPORT jobject JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository
     AMediaCodec_configure(codec, format, nullptr, nullptr, 0);
     AMediaCodec_start(codec);
 
-    // Decode into vector
     std::vector<uint8_t> pcmData;
     bool sawInputEOS = false;
     bool sawOutputEOS = false;
+    size_t inputBuffersProcessed = 0;
+    size_t outputBuffersProcessed = 0;
 
     while (!sawOutputEOS) {
         if (!sawInputEOS) {
             ssize_t inputIndex = AMediaCodec_dequeueInputBuffer(codec, 10000);
             if (inputIndex >= 0) {
+                inputBuffersProcessed++;
                 size_t bufSize;
                 uint8_t *buf = AMediaCodec_getInputBuffer(codec, inputIndex, &bufSize);
                 ssize_t sampleSize = AMediaExtractor_readSampleData(extractor, buf, bufSize);
@@ -83,6 +107,7 @@ extern "C" JNIEXPORT jobject JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository
         AMediaCodecBufferInfo info;
         ssize_t outputIndex = AMediaCodec_dequeueOutputBuffer(codec, &info, 10000);
         if (outputIndex >= 0) {
+            outputBuffersProcessed++;
             size_t outSize;
             uint8_t *outBuf = AMediaCodec_getOutputBuffer(codec, outputIndex, &outSize);
             if (info.size > 0 && outBuf != nullptr) {
@@ -101,40 +126,51 @@ extern "C" JNIEXPORT jobject JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository
     AMediaFormat_delete(format);
     AMediaExtractor_delete(extractor);
 
-    LOGI("Decoded %zu bytes PCM", pcmData.size());
+    safeLogI(logTag, "[C++] Decoded %zu bytes PCM using %zu input and %zu output buffers",
+             pcmData.size(), inputBuffersProcessed, outputBuffersProcessed);
 
-    // Allocate native memory for direct buffer
+    if (pcmData.empty()) {
+        safeLogI(logTag, "[C++] Warning: PCM buffer is empty after decoding");
+    }
+
+    // Allocate native memory for DirectByteBuffer
     void *nativeBuf = malloc(pcmData.size());
     if (!nativeBuf) {
-        LOGE("malloc failed");
+        safeLogE(logTag, "[C++] malloc failed");
+        env->ReleaseStringUTFChars(jLogTag, logTag);
         return nullptr;
     }
     memcpy(nativeBuf, pcmData.data(), pcmData.size());
 
-    // Wrap it as a DirectByteBuffer
     jobject directBuffer = env->NewDirectByteBuffer(nativeBuf, pcmData.size());
-    if (directBuffer == nullptr) {
-        LOGE("Failed to create DirectByteBuffer");
+    if (!directBuffer) {
+        safeLogE(logTag, "[C++] Failed to create DirectByteBuffer");
         free(nativeBuf);
+        env->ReleaseStringUTFChars(jLogTag, logTag);
         return nullptr;
     }
 
+    safeLogI(logTag, "[C++] decodeM4AtoPCM complete, buffer size: %zu bytes", pcmData.size());
+    env->ReleaseStringUTFChars(jLogTag, logTag);
     return directBuffer;
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_leoleoleo_getsongbpm_JNIRepository_releaseBuffer(
+extern "C" JNIEXPORT void JNICALL
+Java_com_leoleoleo_getsongbpm_JNIRepository_releaseBuffer(
         JNIEnv *env,
         jobject /* this */,
-        jobject buffer
+        jobject buffer,
+        jstring jLogTag
 ) {
+    if (!buffer) return;
 
-    if (buffer == nullptr) return;
-
+    const char *logTag = env->GetStringUTFChars(jLogTag, nullptr);
     void *addr = env->GetDirectBufferAddress(buffer);
-    if (addr != nullptr) {
-        free(addr);
-        LOGI("Freed native buffer at %p", addr);
+    if (addr) {
+    free(addr);
+    safeLogI(logTag, "[C++] Freed native buffer at %p", addr);
     } else {
-        LOGE("freeBuffer: buffer address was null!");
+    safeLogE(logTag, "[C++] freeBuffer: buffer address was null!");
     }
+    env->ReleaseStringUTFChars(jLogTag, logTag);
 }

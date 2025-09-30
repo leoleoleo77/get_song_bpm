@@ -9,6 +9,7 @@ import java.io.FileNotFoundException
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import java.nio.ByteBuffer
+import kotlin.math.log
 
 object MethodCallRepository {
 
@@ -36,7 +37,7 @@ object MethodCallRepository {
 
                     val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
 
-                    val result = pfd.use { JNIRepository.decodeM4AtoPCM(it.fd) }
+                    val result = pfd.use { JNIRepository.decodeM4AtoPCM(it.fd, logTag) }
                     if (result != null) {
                         onSuccess(result, pathname)
                     } else {
@@ -75,7 +76,8 @@ object MethodCallRepository {
                             audioBuffer = data,
                             bufferSize = data.capacity(),
                             sampleRate = sampleRate,
-                            channels = channels
+                            channels = channels,
+                            logTag = logTag
                         ).toDouble()
                     } else {
                         throw IllegalStateException("PCM data not found for the given file path. Ensure that convertM4AInputFileToRawPCMByteArray is called first.")
@@ -122,7 +124,8 @@ object MethodCallRepository {
                             bufferSize = data.capacity(),
                             sampleRate = sampleRate,
                             channels = channels,
-                            numPoints = numPoints
+                            numPoints = numPoints,
+                            logTag = logTag
                         ) ?: throw RuntimeException("Failed to extract waveform. Result was null.")
                     } else {
                         throw IllegalStateException("PCM data not found for the given file path")
