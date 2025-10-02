@@ -29,14 +29,8 @@ internal object MethodCallArgument {
     val channels
         get() = "channels"
 
-    val isVerbose
-        get() = "isVerbose"
-
     val numPoints
         get() = "numPoints"
-
-    val logTag
-        get() = "logTag"
 }
 
 internal const val defaultSampleRate = 44100
@@ -63,26 +57,6 @@ internal fun handleOnConversionSuccess(
         channels = channels ?: defaultChannels
     )
     result.success(true)
-
-    val isVerbose = call.argument<Boolean>(MethodCallArgument.isVerbose) == true
-    if (isVerbose) {
-
-        if (sampleRate == null) {
-            DebugLog.info("Sample rate not provided, defaulting to $defaultSampleRate Hz", logTag)
-        }
-
-        if (channels == null) {
-            DebugLog.info("Channels not provided, defaulting to $defaultChannels", logTag)
-        }
-
-        buildString {
-            appendLine(DebugLog.getString("SongProfiler instance created:", logTag))
-            appendLine(DebugLog.getString("  File Path   : $pathname", logTag))
-            appendLine(DebugLog.getString("  Pointer to PCM info : $pointer", logTag))
-            appendLine(DebugLog.getString("  Sample Rate : $sampleRate Hz", logTag))
-            appendLine(DebugLog.getString("  Channels    : $channels", logTag))
-        }.also { print(it) }
-    }
 }
 
 internal fun handleError(result: Result, error: Exception) {

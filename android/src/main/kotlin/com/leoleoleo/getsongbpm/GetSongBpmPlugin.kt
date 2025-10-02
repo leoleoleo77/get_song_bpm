@@ -35,7 +35,6 @@ class GetSongBpmPlugin: FlutterPlugin, MethodCallHandler {
     when (call.method) {
 
       MethodCallName.convertM4AInputFileToRawPCMByteArray -> {
-        logTag = call.argument<String>(MethodCallArgument.logTag) ?: defaultLogTag // Set log tag if provided
         MethodCallRepository.convertM4AInputFileToRawPCMByteArray(
           scope = scope,
           pathname = call.argument<String>(MethodCallArgument.filePath),

@@ -45,7 +45,7 @@ object SongProfilerSingleton{
 
     fun clear() {
         map?.forEach { (_, songProfiler) ->
-            JNIRepository.releaseBuffer(songProfiler.pointerToPCMData, logTag = logTag)
+            JNIRepository.releaseBuffer(songProfiler.pointerToPCMData)
         }
         map?.clear()
         map = null
