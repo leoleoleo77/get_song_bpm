@@ -13,6 +13,7 @@ class SongProfiler {
       this.audioConfigs,
   }) {
     _convertAudioInputFileToRawPCM(_audioFilePath).then((conversionResult) {
+      print("_convertAudioInputFileToRawPCM completed");
       _isFileConverted.complete(conversionResult);
     });
   }
@@ -22,6 +23,7 @@ class SongProfiler {
   int get _channels => audioConfigs?.channels ?? AudioConfigs.defaultChannels.value;
 
   Future<bool> _convertAudioInputFileToRawPCM(String audioInputPath) async {
+    print("_convertAudioInputFileToRawPCM called");
     return await GetSongBpmPlatform.instance.convertAudioInputFileToRawPCM(
         audioInputPath,
         sampleRate: _sampleRate,
@@ -33,8 +35,10 @@ class SongProfiler {
     final isFileConverted = await _isFileConverted.future;
 
     if (isFileConverted) {
+      print("getBpm called");
       return await GetSongBpmPlatform.instance.getBpmFromAudioFile(_audioFilePath);
     } else {
+      print("getBpm failed");
       return null;
     }
   }
@@ -43,8 +47,10 @@ class SongProfiler {
     final isFileConverted = await _isFileConverted.future;
 
     if (isFileConverted) {
+      print("extractWaveform called");
       return await GetSongBpmPlatform.instance.extractWaveform(_audioFilePath, numPoints: numPoints);
     } else {
+      print("extractWaveform failed");
       return null;
     }
   }

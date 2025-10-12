@@ -1,62 +1,83 @@
-import Foundation
 import Accelerate
 
 enum BpmCalculator {
 
-    // Approximate BPM (autocorrelation between 60..200 BPM)
     static func calculateBpm(pcm: Data, sampleRate: Int, channels: Int) -> Double {
-        if pcm.isEmpty || sampleRate <= 0 || channels <= 0 { return -1.0 }
+        guard pcm.count > 0, sampleRate > 0, channels > 0 else { return 0.0 }
 
-        // Downmix & normalize to Float
-        let sampleCount = pcm.count / 2
-        var floats = [Float](repeating: 0, count: sampleCount / channels)
-        pcm.withUnsafeBytes { rawPtr in
-            let int16Ptr = rawPtr.bindMemory(to: Int16.self)
-            var writeIndex = 0
-            for frame in 0..<(sampleCount / channels) {
-                var acc: Int = 0
-                for c in 0..<channels {
-                    acc += Int(int16Ptr[frame * channels + c])
+        let floatSize = MemoryLayout<Float>.size
+        let sampleCount = pcm.count / floatSize
+        guard sampleCount > 0 else { return 0.0 }
+
+        // Convert Data to [Float]
+        var samples = [Float](repeating: 0.0, count: sampleCount)
+        _ = samples.withUnsafeMutableBytes { pcm.copyBytes(to: $0) }
+
+        // Downmix to mono
+        var monoSamples: [Float]
+        if channels > 1 {
+            let monoCount = sampleCount / channels
+            monoSamples = [Float](repeating: 0.0, count: monoCount)
+            for i in 0..<monoCount {
+                var sum: Float = 0.0
+                for ch in 0..<channels {
+                    sum += samples[i * channels + ch]
                 }
-                let avg = Float(acc) / Float(channels * 32768)
-                floats[writeIndex] = avg
-                writeIndex += 1
+                monoSamples[i] = sum / Float(channels)
             }
+        } else {
+            monoSamples = samples
         }
 
-        // High-pass (simple) to emphasize transients
-        var previous: Float = 0
-        for i in 0..<floats.count {
-            let cur = floats[i]
-            floats[i] = cur - previous * 0.98
-            previous = cur
+        // 🔸 Truncate to first 15 seconds
+        let maxAnalysisSeconds = 15.0
+        let maxSamples = min(Int(Double(sampleRate) * maxAnalysisSeconds), monoSamples.count)
+        monoSamples = Array(monoSamples.prefix(maxSamples))
+
+        // 🔸 Downsample to 4 kHz
+        let downsampleFactor = max(1, sampleRate / 4000)
+        let downsampledCount = monoSamples.count / downsampleFactor
+        var downsampled = [Float](repeating: 0, count: downsampledCount)
+        for i in 0..<downsampledCount {
+            downsampled[i] = monoSamples[i * downsampleFactor]
         }
 
-        // Rectify
-        vDSP_vabs(floats, 1, &floats, 1, vDSP_Length(floats.count))
+        // 🔸 Autocorrelation (still simple but much smaller data)
+        let effectiveSampleRate = sampleRate / downsampleFactor
+        let minBpm = 60.0
+        let maxBpm = 200.0
+        let minLag = Int(Double(effectiveSampleRate) * 60.0 / maxBpm)
+        let maxLag = Int(Double(effectiveSampleRate) * 60.0 / minBpm)
+        let lagRange = minLag..<min(maxLag, downsampled.count / 2)
 
-        // Autocorrelation for lag range
-        let minBPM = 60.0
-        let maxBPM = 200.0
-        let minLag = Int((60.0 / maxBPM) * Double(sampleRate))
-        let maxLag = Int((60.0 / minBPM) * Double(sampleRate))
-        if maxLag >= floats.count { return -1.0 }
+        var bestLag = 0
+        var maxCorr: Float = 0.0
 
-        var bestLag = minLag
-        var bestVal: Float = 0
-        for lag in minLag...maxLag {
-            var sum: Float = 0
-            var i = 0
-            while i + lag < floats.count {
-                sum += floats[i] * floats[i + lag]
-                i += 1
-            }
-            if sum > bestVal {
-                bestVal = sum
+        for lag in lagRange {
+            let xSlice = downsampled[lag..<downsampled.count]
+            let ySlice = downsampled[0..<downsampled.count - lag]
+            let corr = dotProduct(xSlice, ySlice)
+            if corr > maxCorr {
+                maxCorr = corr
                 bestLag = lag
             }
         }
-        let bpm = 60.0 * Double(sampleRate) / Double(bestLag)
-        return bpm
+
+        guard bestLag != 0 else { return 0.0 }
+        let bpm = Double(effectiveSampleRate) * 60.0 / Double(bestLag)
+        return max(minBpm, min(maxBpm, bpm)) * 2.0 // Adjusted BPM
     }
+}
+
+@inline(__always)
+func dotProduct(_ x: ArraySlice<Float>, _ y: ArraySlice<Float>) -> Float {
+    var sum: Float = 0.0
+    var i = x.startIndex
+    var j = y.startIndex
+    while i < x.endIndex {
+        sum += x[i] * y[j]
+        i = x.index(after: i)
+        j = y.index(after: j)
+    }
+    return sum
 }

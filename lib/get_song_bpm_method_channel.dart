@@ -47,11 +47,27 @@ class MethodChannelGetSongBpm extends GetSongBpmPlatform {
   @override
   Future<List<double>?> extractWaveform(
       String audioInputPath, {
-      required int numPoints,
-  }) async =>
-      await methodChannel.invokeMethod<List<double>>(
-          _MethodCallName.extractWaveform, {
-          _MethodCallArgument.filePath: audioInputPath,
-          _MethodCallArgument.numPoints: numPoints,
-      });
+        required int numPoints,
+      }) {
+    return methodChannel.invokeMethod<List<dynamic>>(
+      _MethodCallName.extractWaveform, {
+      _MethodCallArgument.filePath: audioInputPath,
+      _MethodCallArgument.numPoints: numPoints,
+      },
+    ).then((output) => output.toDoubleList());
+  }
 }
+
+extension _DynamicListToDouble on List<dynamic>? {
+  List<double>? toDoubleList() {
+    if (this == null) return null;
+
+    // Quick check if already List<double>
+    if (this is List<double>) return this as List<double>;
+
+    // Otherwise, convert each element
+    return this!.map((e) => (e as num).toDouble()).toList();
+  }
+}
+
+

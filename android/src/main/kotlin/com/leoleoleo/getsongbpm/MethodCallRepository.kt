@@ -37,6 +37,7 @@ object MethodCallRepository {
                     val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
 
                     val result = pfd.use { JNIRepository.decodeM4AtoPCM(it.fd) }
+
                     if (result != null) {
                         onSuccess(result, pathname)
                     } else {

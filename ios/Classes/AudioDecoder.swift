@@ -2,51 +2,42 @@ import AVFoundation
 
 enum AudioDecoder {
 
-    static func decodeM4AToPCM(path: String) throws -> Data {
-        let url = URL(fileURLWithPath: path)
-        let asset = AVURLAsset(url: url)
-        guard let track = asset.tracks(withMediaType: .audio).first else {
-            throw NSError(domain: "Decoder", code: -1, userInfo: [NSLocalizedDescriptionKey: "No audio track"])
-        }
+    static func decodeM4AToPCM(path: String) -> Data? {
+        do {
+            let audioFile = try AVAudioFile(forReading: URL(fileURLWithPath: path))
 
-        let reader = try AVAssetReader(asset: asset)
-        let outputSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVLinearPCMIsFloatKey: false,
-            AVLinearPCMIsBigEndianKey: false,
-            AVLinearPCMBitDepthKey: 16,
-            AVLinearPCMIsNonInterleaved: false
-        ]
-        let output = AVAssetReaderTrackOutput(track: track, outputSettings: outputSettings)
-        reader.add(output)
-
-        guard reader.startReading() else {
-            throw NSError(domain: "Decoder", code: -2, userInfo: [NSLocalizedDescriptionKey: "Failed to start reader"])
-        }
-
-        var pcmData = Data()
-        while reader.status == .reading {
-            if let sampleBuffer = output.copyNextSampleBuffer(),
-               let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
-
-                let length = CMBlockBufferGetDataLength(blockBuffer)
-                var buffer = Data(count: length)
-                buffer.withUnsafeMutableBytes { ptr in
-                    _ = CMBlockBufferCopyDataBytes(blockBuffer,
-                                                   atOffset: 0,
-                                                   dataLength: length,
-                                                   destination: ptr.baseAddress!)
-                }
-                pcmData.append(buffer)
-                CMSampleBufferInvalidate(sampleBuffer)
-            } else {
-                break
+            let format = AVAudioFormat(
+                commonFormat: .pcmFormatFloat32,
+                sampleRate: audioFile.fileFormat.sampleRate,
+                channels: audioFile.fileFormat.channelCount,
+                interleaved: false
+            )
+            guard let format = format else {
+                print("Error: Unable to create audio format")
+                return nil
             }
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(audioFile.length)) else {
+                print("Error: Unable to allocate PCM buffer")
+                return nil
+            }
+            try audioFile.read(into: buffer)
+            guard let channelData = buffer.floatChannelData else {
+                print("Error: No channel data in buffer")
+                return nil
+            }
+            let frameLength = Int(buffer.frameLength)
+            let channelCount = Int(buffer.format.channelCount)
+            var pcmData = Data()
+            for frame in 0..<frameLength {
+                for channel in 0..<channelCount {
+                    let sample = channelData[channel][frame]
+                    withUnsafeBytes(of: sample) { pcmData.append(contentsOf: $0) }
+                }
+            }
+            return pcmData
+        } catch {
+            print("Error decoding audio: \(error)")
+            return nil
         }
-
-        if reader.status == .failed {
-            throw NSError(domain: "Decoder", code: -3, userInfo: [NSLocalizedDescriptionKey: reader.error?.localizedDescription ?? "Unknown decode error"])
-        }
-        return pcmData
     }
 }

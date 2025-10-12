@@ -37,10 +37,6 @@ internal const val defaultSampleRate = 44100
 
 internal const val defaultChannels = 1
 
-internal const val defaultLogTag = ""
-
-internal var logTag: String = defaultLogTag
-
 internal fun handleOnConversionSuccess(
     call: MethodCall,
     result: Result,

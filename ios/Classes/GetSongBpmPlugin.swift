@@ -25,19 +25,17 @@ public class GetSongBpmPlugin: NSObject, FlutterPlugin {
             let channels = (args["channels"] as? Int) ?? 1
 
             DispatchQueue.global(qos: .userInitiated).async {
-                do {
-                    let decoded = try AudioDecoder.decodeM4AToPCM(path: filePath)
-                    // Store pointer (Data) with provided override metadata (mirrors Android storing passed params)
-                    SongProfilerSingleton.newInstance(
-                        filePath: filePath,
-                        sampleRate: sampleRate,
-                        channels: channels,
-                        pcmData: decoded
-                    )
-                    result(true)
-                } catch {
-                    result(FlutterError(code: "DECODE_ERROR", message: error.localizedDescription, details: nil))
+                guard let decoded = AudioDecoder.decodeM4AToPCM(path: filePath), !decoded.isEmpty else {
+                    result(FlutterError(code: "DECODE_ERROR", message: "Decoded PCM is empty", details: nil))
+                    return
                 }
+                SongProfilerSingleton.newInstance(
+                    filePath: filePath,
+                    sampleRate: sampleRate,
+                    channels: channels,
+                    pcmData: decoded
+                )
+                result(true)
             }
 
         case "getBpmFromAudioFile":

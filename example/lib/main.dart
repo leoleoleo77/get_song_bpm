@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get_song_bpm/song_profiler/audio_configs.dart';
 import 'dart:async';
 import 'package:get_song_bpm/song_profiler/SongProfiler.dart';
+import 'dart:io';
+import 'package:flutter/services.dart' show rootBundle;
 
 void main() {
   runApp(const MyApp());
@@ -24,6 +26,14 @@ class _MyAppState extends State<MyApp> {
     initPlatformState();
   }
 
+  Future<String> _copyAssetToTemp(String assetPath, {String? filename}) async {
+    final bytes = (await rootBundle.load(assetPath)).buffer.asUint8List();
+    final tempDir = Directory.systemTemp;
+    final file = File('${tempDir.path}/${filename ?? assetPath.split('/').last}');
+    await file.writeAsBytes(bytes, flush: true);
+    return file.path;
+  }
+
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     double? bpm = null;
@@ -31,17 +41,17 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
+      final localPath = await _copyAssetToTemp('assets/LOOP_0.m4a', filename: 'LOOP_0.m4a');
       final songProfiler = SongProfiler(
-          "/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/LOOP_0.m4a",
-          audioConfigs: AudioConfigs(
-              sampleRate: AudioConfigs.defaultSampleRate,
-              channel: AudioConfigs.defaultChannels,
-          ),
+        localPath,
+        audioConfigs: AudioConfigs(
+          sampleRate: AudioConfigs.defaultSampleRate,
+          channel: AudioConfigs.defaultChannels,
+        ),
       );
-      // final songProfiler2 = SongProfiler("/storage/emulated/0/Android/data/com.leoleoleo.get_song_bpm_example/files/AndItNeverEnds.m4a", isVerbose: true);
 
       bpm = await songProfiler.getBpm();
-      waveform = await  songProfiler.extractWaveform(numPoints: 100);
+      waveform = await songProfiler.extractWaveform(numPoints: 100);
     } catch (e) {
       print(e);
     }
@@ -64,6 +74,7 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: Column(
             children: [
+              SizedBox(height: 100),
               Text('BPM: $_bpm\n'),
               Text('Waveform: $_waveform\n'),
             ],
